@@ -1,88 +1,53 @@
-# Test Log - /bin Recovery
+## Consolidation Testing - Feb 24, 2026
 
-Date: 2026-02-06
+Ran all 5 /bin drills from memory. Timed myself. No looking at notes.
 
-## Drill 01: Tool Inventory
+### Drill 01: Tool Inventory
 
-Ran Alpine to see the real /bin split:
-```bash
-docker run -it --rm alpine:3.19 /bin/sh
-ls /bin | wc -l      # 82
-ls /usr/bin | wc -l  # 143
-vi                   # works, it's in /usr/bin
-```
+Checked what's actually in Alpine's /bin vs /usr/bin.
 
-/bin has 82 commands. /usr/bin has 143.
+82 commands in /bin. 143 in /usr/bin. vim and curl missing like expected. vi and find are there but in /usr/bin not /bin.
 
-vi exists but it's in /usr/bin, not /bin. If /usr fails to mount, you lose it.
+Passed.
 
----
+### Drill 02: Manual Mount
 
-## Drill 02: Manual Mount
+Broke /usr on purpose with mv. Tools disappeared. vi stopped working.
 
-Broke /usr on purpose:
-```bash
-mv /usr /usr.unmounted
-mkdir /usr
-vi  # not found
-```
+Mounted it back with `mount /usr.backup /usr`. Everything came back. 143 tools restored.
 
-Fixed it:
-```bash
-mount /usr.unmounted /usr
-vi  # works now
-ls /usr/bin | wc -l  # 143 binaries back
-```
+Passed.
 
-mount reconnected everything. Tools came back.
+### Drill 03: Log Analysis
 
----
+Fake boot log with errors. Had to find problems using only grep.
 
-## Drill 03: Log Analysis
+Found 3 FAILED entries and 2 ERROR entries. Used `grep -c` to count because wc wasn't in /bin.
 
-Searched fake boot log for errors:
-```bash
-grep FAILED /var/log/boot.log
-grep ERROR /var/log/boot.log
-grep -c FAILED /var/log/boot.log  # 3
-grep -c ERROR /var/log/boot.log   # 2
-```
+/dev/sda2 had filesystem errors.
 
-Found /dev/sda2 has filesystem errors.
+Passed.
 
-3 failed services. 2 errors total.
+### Drill 04: Process Management
 
-grep -c worked because Alpine doesn't have wc in /bin.
+Started a fake service with sleep. Had to kill it by PID without systemctl.
+
+Messed up first time - tried `kill 3600` (the sleep duration, not the PID). 
+
+Corrected to `kill 8`. Process died. Saw the Terminated message.
+
+Passed.
+
+### Drill 05: Text Editing
+
+Had to change port=80 to port=8080 in a config file. No vim or nano.
+
+Used sed: `sed -i 's/port=80/port=8080/' /tmp/config.txt`
+
+Checked with cat. It worked.
+
+Passed.
 
 ---
 
-## Drill 04: Process Management
-
-[Skipped for now. Need more background on processes.]
-
----
-
-## Drill 05: Text Editing
-
-[Fill this after testing]
-
----
-
-## What I Learned
-
-Alpine /bin is way smaller than Ubuntu (82 vs 1580). That's because Ubuntu merged everything.
-
-Docker needs --privileged flag to allow mount. Otherwise you get permission denied.
-
-wc isn't in Alpine's /bin. Had to use grep -c instead.
-
-vi is in /usr/bin, not /bin. Emergency shell without /usr means no vi either.
-
----
-
-## Problems I Hit
-
-Confused Docker container with my host system at first.
-
-Learned to check hostname before running destructive commands.
-
+All 5 drills done. Got better at not executing compromised binaries. Still need practice with sed syntax.
