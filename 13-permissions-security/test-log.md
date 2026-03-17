@@ -1,4 +1,4 @@
-# Module 11 - File Permissions & Directory Security
+# Module 13 - File Permissions & Directory Security
 
 ## Scripts
 - break.sh: Plants four permission misconfigs — removes sticky bit from /tmp, creates world-writable dir, world-writable file in /etc, and rogue SUID binary
