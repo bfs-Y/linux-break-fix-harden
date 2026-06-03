@@ -56,3 +56,15 @@ Always check persistence before killing:
   ~/.bashrc
   ~/.ssh/authorized_keys
   systemctl list-units
+
+## Privilege Separation — Key Lessons
+- Never run services as root or personal accounts
+- Master/worker split: root binds privileged port, drops to service account immediately
+- Service account requirements: --system, --no-create-home, --shell /usr/sbin/nologin
+- Attacker impact by user: root=full system, personal=your data, service account=nothing useful
+
+## Create Service Account
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin <service-name>
+
+## Run Service As Non-Root
+sudo -u <service-account> <command>
