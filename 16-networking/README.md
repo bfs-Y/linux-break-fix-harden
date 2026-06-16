@@ -22,8 +22,3 @@ Build real networking instinct across the full stack — interfaces, routing, DN
 10. TLS/SSL — handshake, certificates, debugging
 11. Network attacks — MITM, DNS poisoning, scanning
 12. Hardening — locking down a fresh server
-
-## Training Machine
-- OS: Ubuntu 24.04
-- User: training
-- Repo: /home/ibnb/linux-break-fix-harden
