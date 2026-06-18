@@ -1,0 +1,43 @@
+DRILL 05 — Firewall Rules: Reading, Writing, Verifying
+Topic: Firewalls (ufw / iptables)
+Repeat daily until instant.
+
+--- READ ---
+sudo ufw status verbose                          # friendly view: default policy + all rules
+sudo iptables -L ufw-user-input -n -v             # raw kernel rules ufw actually generated
+sudo iptables -L ufw-before-input -n -v | tail -15  # infrastructure chain: stateful tracking, ICMP, defaults
+
+--- WHAT TO LOOK FOR ---
+Default: deny (incoming)        = anything with no matching rule gets dropped
+source 0.0.0.0/0                = open to the entire internet — dangerous for sensitive ports
+source X.X.X.X/24                = restricted to a specific subnet — what you want for SSH, admin ports
+ctstate RELATED,ESTABLISHED      = replies to connections you already initiated, always allowed
+pkts/bytes = 0                   = rule exists but hasn't matched any traffic yet (not necessarily wrong)
+
+--- WRITING A RULE: BUILD THE SENTENCE FIRST ---
+"Traffic from <SOURCE>, destined for port <PORT>, protocol <TCP/UDP>, should be <ALLOW/DENY>"
+Then translate:
+sudo ufw allow from <SOURCE_SUBNET> to any port <PORT> proto tcp
+
+--- BREAK ---
+sudo ufw allow 9090/tcp                  # opens port to entire internet, no source restriction
+sudo ufw status verbose | grep 9090      # confirm "Anywhere" — this is the dangerous state
+
+--- FIX ---
+sudo ufw delete allow 9090/tcp
+sudo ufw allow from 192.168.122.0/24 to any port 9090 proto tcp
+sudo ufw status verbose | grep 9090                      # confirm subnet-restricted
+sudo iptables -L ufw-user-input -n -v | grep 9090         # confirm at kernel level too
+
+--- DROP vs REJECT, KNOW THE DIFFERENCE ---
+DROP   = silent discard, attacker gets no response, doesn't know if port is closed or host is dead (slower recon for them)
+REJECT = active refusal sent back, attacker instantly knows something is alive (faster but gives away information)
+Hardened production systems default to DROP for unsolicited traffic — invisibility over politeness.
+
+--- PRODUCTION SCENARIO ---
+Security audit flags a port open to 0.0.0.0/0 that should be internal-only.
+Step 1: sudo ufw status verbose — confirm the over-permissive rule exists
+Step 2: identify the correct source range your legitimate traffic actually needs
+Step 3: delete the wide-open rule, add the properly scoped one
+Step 4: verify at BOTH layers — ufw status AND raw iptables — never trust one view alone
+Step 5: test the live behavior, don't just read the config
