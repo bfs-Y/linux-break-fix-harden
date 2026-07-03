@@ -5,7 +5,15 @@ IFACE=$(ip route | grep default | awk '{print $5}' | head -1)
 TARGET_IP=$(dig +short example.com | head -1)
 PCAP="/tmp/tcp-handshake.pcap"
 
-echo "[SETUP] Detected interface: $IFACE"
+echo "[SAFETY CHECK] You are about to capture traffic on:"
+echo "  Hostname: $(hostname)"
+echo "  Interface: $IFACE"
+read -p "Confirm this is the intended TRAINING machine, not your host (y/N): " CONFIRM
+if [ "$CONFIRM" != "y" ]; then
+    echo "[ABORTED] Confirmation not given. No changes made."
+    exit 1
+fi
+
 echo "[SETUP] Target: example.com ($TARGET_IP)"
 echo ""
 echo "=== CAPTURING FULL TCP CONVERSATION ==="
@@ -16,11 +24,9 @@ curl -s -o /dev/null http://example.com
 sleep 1
 sudo kill $TCPDUMP_PID 2>/dev/null
 wait $TCPDUMP_PID 2>/dev/null
-
 echo ""
 echo "=== READING CAPTURE ==="
 sudo tcpdump -r "$PCAP" -n
-
 echo ""
 echo "[READ THIS] Identify each flag combination above:"
 echo "  [S]   = SYN       — client requests connection"
