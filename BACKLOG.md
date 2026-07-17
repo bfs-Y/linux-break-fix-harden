@@ -99,3 +99,11 @@ audit — saw zombie-factory, oom-trigger, reverse-shell-sim, log-tamper,
 cron-persistence, ld-preload-persist file names scroll past that weren't
 part of that audit. Full folder-by-folder audit needs to be broader than
 first scoped.
+
+## 13-permission-directories — incomplete structure (revisit later)
+Folder renamed from 13-permissions-security. Currently has break/, fix/,
+drills/ with real tested content, but missing: README.md, test-log.md,
+postmortem/. Also worth checking harden/ — likely not needed for basics-only
+scope, confirm before deciding. Come back to complete the folder structure
+and write a postmortem drawing from tonight's real debugging (missing sudo
+on privileged commands, nobody/nogroup naming mistake).
