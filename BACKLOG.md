@@ -1,109 +1,59 @@
 # linux-break-fix-harden — Backlog
 
-## Repo-wide security/fundamentals split needed (found 2026-07-16)
-This repo mixes genuine Linux fundamentals with offensive-security/red-team
-content that should live in linux-security-labs instead — same pattern
-already fixed for 16-networking (firewall, hardening-audit) and for
-03-privilege-escalation, 13-permissions-security, 14-users-sudo (already
-migrated tonight).
+## Repo-wide security/fundamentals split — COMPLETE (2026-07-17)
+All 10 originally-flagged folders migrated to linux-security-labs, verified
+via actual file content (not just names), using the test: "is there an
+attacker in this scenario, or is this a neutral mechanism/misconfiguration?"
 
-Verified via actual file content, not just folder names — apply the test:
-"is there an attacker in this scenario, or is this a neutral mechanism/
-misconfiguration?" before moving anything.
+Final migration results:
+- 01-usr-execution → phase7-secops/usr-execution (whole folder, confirmed
+  security throughout, no split needed)
+- 04-sbin-admin → SPLIT: break/fix/harden scripts + drills/05-system-audit.md
+  moved to phase3-access-control/sbin-admin (security); drills 01-04
+  (sbin-inventory, user-management, filesystem-ops, service-management)
+  stayed here — genuinely neutral admin-tool reference content
+- 05-lib-hijacking → phase7-secops/lib-hijacking (whole folder)
+- 06-tmp-attacks → phase7-secops/tmp-attacks (whole folder)
+- 07-var-attacks → phase6-logging-monitoring/var-attacks (whole folder —
+  log/monitoring integrity specifically, not general secops)
+- 08-boot-security → phase7-secops/boot-security (whole folder)
+- 09-root-hardening → phase7-secops/root-hardening (whole folder)
+- 10-dev-attacks → phase7-secops/dev-attacks (whole folder)
+- 11-etc-hardening → phase7-secops/etc-hardening (whole folder, confirmed:
+  backdoor account planting via /etc/passwd + /etc/shadow)
+- 12-home-security → phase7-secops/home-security (whole folder)
 
-### CONFIRMED SECURITY — move to linux-security-labs
-- 01-usr-execution — PATH hijack, "malicious ls", "exfiltrating data",
-  explicit attacker framing
-- 04-sbin-admin — world-writable useradd binary, privilege-escalation
-  vector via a system binary
-- 05-lib-hijacking — LD_PRELOAD persistence (real rootkit technique),
-  shared library replacement/checksum evasion
-- 06-tmp-attacks — PATH hijack via /tmp targeting root cron job
-- 07-var-attacks — log tampering: surgical deletion of attacker SSH
-  activity from auth.log (candidate for phase6-logging-monitoring,
-  NOT phase7 — this is about log/monitoring integrity specifically)
-- 08-boot-security — planted root backdoor in /etc/passwd + /etc/shadow
-- 09-root-hardening — GRUB boot-parameter injection (init=/bin/bash
-  bypass), real physical-access attack technique
-- 10-dev-attacks — /dev/null replaced with a capture file to exfiltrate
-  data meant to be discarded
-- 11-etc-hardening — NOT YET CHECKED, folder name suggests likely security,
-  verify content before assuming
-- 12-home-security — planted reverse shell in .bashrc, planted attacker
-  SSH key in authorized_keys
+All drills in the 6 batch-moved folders individually reviewed after the
+move — confirmed all genuinely security-framed, no neutral content found
+(unlike 04-sbin-admin, which did require a split).
 
-### CONFIRMED FUNDAMENTALS — stay here, no action needed
-- 02-bin-recovery — /usr mount failure simulation, no attacker, genuine
-  resilience/troubleshooting scenario
-- 15-process-signals — zombie process creation for inspection, matches
-  known legitimate Module 15 fundamentals work
+## Remaining fundamentals content in this repo (final, verified shape)
+- 02-bin-recovery — /usr mount failure simulation, no attacker
+- 04-sbin-admin (drills only) — sbin tool inventory, user management,
+  filesystem ops, service management reference
+- 13-permission-directories — basics-only permission/ownership lab,
+  tested live on VM
+- 14-users-sudo — basics-only useradd/usermod -aG lab, tested live on VM
+- 15-process-signals — zombie process creation for inspection
+- 16-networking — interface/route/DNS basics
 
-### Execution plan for next session
-1. Check 11-etc-hardening content (not yet verified)
-2. For each CONFIRMED SECURITY folder: create matching phase folder in
-   linux-security-labs (07-var-attacks -> phase6-logging-monitoring;
-   the rest likely phase7-secops unless individual review suggests
-   otherwise, same reasoning process used for privilege-escalation/
-   users-sudo/permissions-security tonight)
-3. mv (not git mv, cross-repo) each folder's contents into place
-4. Commit removal in linux-break-fix-harden, commit addition in
-   linux-security-labs, verify no data lost via find before each commit
-5. After migration, re-verify linux-break-fix-harden's remaining folder
-   list is genuinely fundamentals-only (repeat the same audit once more,
-   don't assume this list is exhaustive)
+## Still open — thin folders (not urgent, revisit later)
+13-permission-directories and 14-users-sudo have real break/fix content now
+(added 2026-07-16/17), but still missing: README.md, test-log.md,
+postmortem/ for both. harden/ likely not needed for basics-only scope —
+confirm before deciding.
 
-## Lesson from tonight's users-sudo/permissions-security migration
-Bulk-moving entire folders based on the break/ script's content was wrong —
-each folder had 1 genuinely neutral drill file mixed in with 6 legitimately
-security-framed ones (users-sudo: 04-useradd-usermod.md was neutral;
-permissions-security: 06-stat-namei.md was neutral). BOTH were caught and
-restored to fundamentals after the fact.
-When executing the remaining 10-folder migration: check EVERY file
-individually (break/fix/harden/drills), not just the break/ script, before
-deciding a whole folder moves. Some drills may be neutral command-reference
-content even inside a folder whose break/ scripts are clearly attacks.
-
-## Thin folders after security migration (not urgent, revisit later)
-13-permissions-security and 14-users-sudo now only contain the restored
-neutral drills (06-stat-namei.md, 04-useradd-usermod.md respectively) — no
-break/fix/harden scripts of their own, since all prior break/fix content in
-those folders was genuinely security-framed and correctly stayed migrated.
-Consider whether these two topics deserve real neutral break/fix content of
-their own (e.g., a genuine permission-misconfiguration-no-attacker scenario,
-a genuine useradd/usermod mistake-and-fix scenario) or whether a single
-reference drill is sufficient for this repo's scope.
-
-## No postmortem content anywhere in this repo
+## Still open — no postmortem content anywhere in this repo
 Confirmed: linux-break-fix-harden has zero postmortem/ entries across any
 topic folder. Revisit — decide whether to backfill at least one real
 postmortem here, matching the standard already established in
-linux-networking-labs (ARP capture) and linux-security-labs.
+linux-networking-labs (ARP capture, DNS backup-corruption) and
+linux-security-labs.
 
-## URGENT: testing was done on host, not training VM — process violation
-Tonight's 13-permissions-security / 14-users-sudo testing (drilluser,
-/etc/drilltest.conf) ran on the HOST by mistake, violating the established
-break/fix-runs-in-VM-only rule. Cleaned up afterward (drilluser deleted,
-/etc/drilltest.conf removed). No lasting harm done this time, but the
-process discipline slipped — re-establish PS1 awareness before next
-scripting session.
-
-Also: attempted scp of the whole repo to the VM failed partway (permission
-denied on .git/objects — VM's existing clone owned by different user/perms).
-Do NOT continue that approach. Next session: use `git clone` fresh on the
-VM instead of scp, keep host and VM repo copies independent, always push
-from host then pull on VM (or vice versa) rather than direct file copy.
-
-Also confirmed via this failed scp: linux-break-fix-harden has significantly
-MORE unmigrated security content than the 10 folders logged in the initial
-audit — saw zombie-factory, oom-trigger, reverse-shell-sim, log-tamper,
-cron-persistence, ld-preload-persist file names scroll past that weren't
-part of that audit. Full folder-by-folder audit needs to be broader than
-first scoped.
-
-## 13-permission-directories — incomplete structure (revisit later)
-Folder renamed from 13-permissions-security. Currently has break/, fix/,
-drills/ with real tested content, but missing: README.md, test-log.md,
-postmortem/. Also worth checking harden/ — likely not needed for basics-only
-scope, confirm before deciding. Come back to complete the folder structure
-and write a postmortem drawing from tonight's real debugging (missing sudo
-on privileged commands, nobody/nogroup naming mistake).
+## Resolved — process note for future reference
+Earlier in this migration, testing was accidentally done on the HOST
+instead of the training VM (13-permission-directories/14-users-sudo initial
+testing). Caught, cleaned up, no lasting harm. Lesson: always confirm
+`hostname` before running break/fix scripts. A parallel attempt to scp the
+whole repo to the VM also failed (git object permission errors) — resolved
+by using `git clone`/`git pull` instead of direct file copy going forward.
